@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer l'employé - Gestion RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Supprimer l'employé</h1>
+        <a href="{% url 'rh_app:employe_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-danger">Confirmation de suppression</h6>
+        </div>
+        <div class="card-body">
+            <p class="lead">Êtes-vous sûr de vouloir supprimer l'employé suivant ?</p>
+            
+            <div class="table-responsive">
+                <table class="table">
+                    <tr>
+                        <th>Nom</th>
+                        <td>{{ employe.nom }}</td>
+                    </tr>
+                    <tr>
+                        <th>Prénom</th>
+                        <td>{{ employe.prenom }}</td>
+                    </tr>
+                    <tr>
+                        <th>Poste</th>
+                        <td>{{ employe.poste }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ employe.email }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Cette action supprimera également toutes les présences et absences associées à cet employé.
+                Cette action est irréversible.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'rh_app:employe_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirmer la suppression
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if form.instance.pk %}Modifier{% else %}Nouvelle{% endif %} Présence - Gestion RH
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            {% if form.instance.pk %}
+                Modifier la présence du {{ form.instance.date }}
+            {% else %}
+                Nouvelle Présence
+            {% endif %}
+        </h1>
+        <a href="{% url 'rh_app:presence_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.date.id_for_label }}" class="form-label">Date</label>
+                            {% render_field form.date class="form-control" type="date" %}
+                            {% if form.date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if user.is_staff %}
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.employe.id_for_label }}" class="form-label">Employé</label>
+                            {% render_field form.employe class="form-select" %}
+                            {% if form.employe.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.employe.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.heure_entree.id_for_label }}" class="form-label">Heure d'Entrée</label>
+                            {% render_field form.heure_entree class="form-control" type="time" %}
+                            {% if form.heure_entree.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.heure_entree.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.heure_sortie.id_for_label }}" class="form-label">Heure de Sortie</label>
+                            {% render_field form.heure_sortie class="form-control" type="time" %}
+                            {% if form.heure_sortie.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.heure_sortie.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                    {% render_field form.statut class="form-select" %}
+                    {% if form.statut.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.statut.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {% render_field form.notes class="form-control" rows="3" %}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.notes.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Validation des heures
+        $('form').on('submit', function(e) {
+            var heureEntree = $('#{{ form.heure_entree.id_for_label }}').val();
+            var heureSortie = $('#{{ form.heure_sortie.id_for_label }}').val();
+            
+            if (heureSortie && heureEntree > heureSortie) {
+                e.preventDefault();
+                alert('L\'heure de sortie doit être postérieure à l\'heure d\'entrée.');
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if form.instance.pk %}Modifier{% else %}Nouvelle{% endif %} Absence - Gestion RH
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            {% if form.instance.pk %}
+                <i class="fas fa-calendar-edit me-2"></i>Modifier l'absence du {{ form.instance.date_debut }} au {{ form.instance.date_fin }}
+            {% else %}
+                <i class="fas fa-calendar-plus me-2"></i>Nouvelle Absence
+            {% endif %}
+        </h1>
+        <a href="{% url 'rh_app:absence_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-info-circle me-2"></i>Informations de l'absence
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate class="needs-validation">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.date_debut.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar-day me-2"></i>Date de Début
+                            </label>
+                            {% render_field form.date_debut class="form-control" type="date" %}
+                            {% if form.date_debut.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ form.date_debut.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.date_fin.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar-day me-2"></i>Date de Fin
+                            </label>
+                            {% render_field form.date_fin class="form-control" type="date" %}
+                            {% if form.date_fin.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ form.date_fin.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if user.is_staff %}
+                <div class="mb-3">
+                    <label for="{{ form.employe.id_for_label }}" class="form-label">
+                        <i class="fas fa-user me-2"></i>Employé
+                    </label>
+                    {% render_field form.employe class="form-select" %}
+                    {% if form.employe.errors %}
+                    <div class="invalid-feedback d-block">
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ form.employe.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.raison.id_for_label }}" class="form-label">
+                                <i class="fas fa-question-circle me-2"></i>Raison
+                            </label>
+                            {% render_field form.raison class="form-select" %}
+                            {% if form.raison.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ form.raison.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if user.is_staff %}
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.statut.id_for_label }}" class="form-label">
+                                <i class="fas fa-check-circle me-2"></i>Statut
+                            </label>
+                            {% render_field form.statut class="form-select" %}
+                            {% if form.statut.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ form.statut.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                        <i class="fas fa-align-left me-2"></i>Description
+                    </label>
+                    {% render_field form.description class="form-control" rows="3" placeholder="Décrivez les détails de absence..." %}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ form.description.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Validation des dates
+        $('form').on('submit', function(e) {
+            var dateDebut = new Date($('#{{ form.date_debut.id_for_label }}').val());
+            var dateFin = new Date($('#{{ form.date_fin.id_for_label }}').val());
+            
+            if (dateFin < dateDebut) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur de dates',
+                    text: 'La date de fin doit être postérieure à la date de début.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+            }
+        });
+
+        // Ajout de la classe is-invalid aux champs invalides
+        $('form').on('submit', function() {
+            $(this).addClass('was-validated');
+        });
+
+        // Validation en temps réel
+        $('input, select').on('change', function() {
+            if ($(this).val()) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

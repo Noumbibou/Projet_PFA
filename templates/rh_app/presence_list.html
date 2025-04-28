@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Liste des Présences - Gestion RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Liste des Présences</h1>
+        <div>
+            {% if user.is_staff %}
+            <a href="{% url 'rh_app:presence_export_csv' %}" class="btn btn-info me-2">
+                <i class="fas fa-file-csv"></i> Exporter en CSV
+            </a>
+            {% endif %}
+            <a href="{% url 'rh_app:presence_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle Présence
+            </a>
+        </div>
+    </div>
+
+    {% if form %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="{{ form.date_debut.id_for_label }}" class="form-label">Date Début</label>
+                    {{ form.date_debut }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.date_fin.id_for_label }}" class="form-label">Date Fin</label>
+                    {{ form.date_fin }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.employe.id_for_label }}" class="form-label">Employé</label>
+                    {{ form.employe }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                    {{ form.statut }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.heure_entree.id_for_label }}" class="form-label">Heure d'Entrée</label>
+                    {{ form.heure_entree }}
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                    <a href="{% url 'rh_app:presence_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Employé</th>
+                            <th>Heure d'Entrée</th>
+                            <th>Heure de Sortie</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for presence in presences %}
+                        <tr>
+                            <td>{{ presence.date }}</td>
+                            <td>{{ presence.employe.nom }} {{ presence.employe.prenom }}</td>
+                            <td>{{ presence.heure_entree }}</td>
+                            <td>{{ presence.heure_sortie|default:"-" }}</td>
+                            <td>
+                                <span class="badge {% if presence.statut == 'present' %}bg-success{% elif presence.statut == 'absent' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ presence.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="#" class="btn btn-info btn-sm" onclick="showPresenceDetails({{ presence.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.is_staff or presence.employe == user.employe %}
+                                    <a href="{% url 'rh_app:presence_update' presence.pk %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Aucune présence enregistrée</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section des détails -->
+    <div id="presenceDetails" class="card shadow mb-4" style="display: none;">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Détails de la présence</h6>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="$('#presenceDetails').hide();">
+                <i class="fas fa-times"></i> Fermer
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <tr>
+                        <th>Employé</th>
+                        <td id="detailEmploye"></td>
+                    </tr>
+                    <tr>
+                        <th>Date</th>
+                        <td id="detailDate"></td>
+                    </tr>
+                    <tr>
+                        <th>Heure d'Entrée</th>
+                        <td id="detailHeureEntree"></td>
+                    </tr>
+                    <tr>
+                        <th>Heure de Sortie</th>
+                        <td id="detailHeureSortie"></td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td id="detailStatut"></td>
+                    </tr>
+                    <tr id="detailNotesRow" style="display: none;">
+                        <th>Notes</th>
+                        <td id="detailNotes"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+            },
+            "order": [[0, "desc"]]
+        });
+    });
+
+    function showPresenceDetails(presenceId) {
+        // Récupérer les données de la présence
+        const presence = {
+            {% for presence in presences %}
+            {{ presence.id }}: {
+                employe: "{{ presence.employe.nom }} {{ presence.employe.prenom }}",
+                date: "{{ presence.date }}",
+                heureEntree: "{{ presence.heure_entree }}",
+                heureSortie: "{{ presence.heure_sortie|default:'-' }}",
+                statut: "{{ presence.get_statut_display }}",
+                notes: "{{ presence.notes|default:'' }}"
+            },
+            {% endfor %}
+        };
+
+        // Afficher les détails
+        $('#detailEmploye').text(presence[presenceId].employe);
+        $('#detailDate').text(presence[presenceId].date);
+        $('#detailHeureEntree').text(presence[presenceId].heureEntree);
+        $('#detailHeureSortie').text(presence[presenceId].heureSortie);
+        $('#detailStatut').text(presence[presenceId].statut);
+        
+        if (presence[presenceId].notes) {
+            $('#detailNotes').text(presence[presenceId].notes);
+            $('#detailNotesRow').show();
+        } else {
+            $('#detailNotesRow').hide();
+        }
+
+        // Afficher la section des détails
+        $('#presenceDetails').show();
+        
+        // Faire défiler jusqu'aux détails
+        $('html, body').animate({
+            scrollTop: $('#presenceDetails').offset().top - 100
+        }, 500);
+    }
+</script>
+{% endblock %}
+{% endblock %} 

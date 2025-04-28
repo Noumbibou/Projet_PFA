@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de Bord - Gestion RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if user.is_staff %}
+    <!-- Admin Dashboard -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Tableau de Bord Administrateur</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'rh_app:employe_create' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-user-plus me-1"></i>Nouvel Employé
+            </a>
+            <a href="{% url 'rh_app:presence_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-clock me-1"></i>Nouvelle Présence
+            </a>
+            <a href="{% url 'rh_app:absence_create' %}" class="btn btn-info btn-sm">
+                <i class="fas fa-calendar-times me-1"></i>Nouvelle Absence
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Employés
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_employes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Présences Aujourd'hui
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ presences_aujourdhui }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Absences en Attente
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ absences_en_attente }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Taux de Présence
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ taux_presence }}%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percent fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Présences par Mois</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="presencesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Statut des Absences</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="absencesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Employee Dashboard -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Tableau de Bord Employé</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'rh_app:presence_create' %}" class="btn btn-success btn-sm">
+                <i class="fas fa-clock me-1"></i>Nouvelle Présence
+            </a>
+            <a href="{% url 'rh_app:absence_create' %}" class="btn btn-info btn-sm">
+                <i class="fas fa-calendar-times me-1"></i>Nouvelle Absence
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Mon Profil</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tr>
+                                <th>Nom</th>
+                                <td>{{ user.employe.nom }}</td>
+                            </tr>
+                            <tr>
+                                <th>Prénom</th>
+                                <td>{{ user.employe.prenom }}</td>
+                            </tr>
+                            <tr>
+                                <th>Poste</th>
+                                <td>{{ user.employe.poste }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td>{{ user.employe.email }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Mes Dernières Présences</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Heure d'Entrée</th>
+                                    <th>Heure de Sortie</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for presence in dernieres_presences %}
+                                <tr>
+                                    <td>{{ presence.date }}</td>
+                                    <td>{{ presence.heure_entree }}</td>
+                                    <td>{{ presence.heure_sortie|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge {% if presence.statut == 'present' %}bg-success{% elif presence.statut == 'absent' %}bg-danger{% else %}bg-warning{% endif %}">
+                                            {{ presence.get_statut_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Aucune présence enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Mes Dernières Absences</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Période</th>
+                                    <th>Raison</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for absence in dernieres_absences %}
+                                <tr>
+                                    <td>{{ absence.date_debut }} au {{ absence.date_fin }}</td>
+                                    <td>{{ absence.get_raison_display }}</td>
+                                    <td>
+                                        <span class="badge {% if absence.statut == 'approuvee' %}bg-success{% elif absence.statut == 'refusee' %}bg-danger{% else %}bg-warning{% endif %}">
+                                            {{ absence.get_statut_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Aucune absence enregistrée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if user.is_staff %}
+    // Graphique des présences par mois
+    const ctx = document.getElementById('presencesChart').getContext('2d');
+    const presencesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ mois_labels|safe }},
+            datasets: [{
+                label: 'Présences',
+                data: {{ presences_data|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Graphique des statuts d'absences
+    const ctx2 = document.getElementById('absencesChart').getContext('2d');
+    const absencesChart = new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: ['Approuvées', 'En attente', 'Refusées'],
+            datasets: [{
+                data: {{ absences_stats|safe }},
+                backgroundColor: [
+                    'rgb(75, 192, 192)',
+                    'rgb(255, 205, 86)',
+                    'rgb(255, 99, 132)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
+{% endblock %} 

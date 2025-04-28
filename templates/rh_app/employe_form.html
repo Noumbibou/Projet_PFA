@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if form.instance.pk %}Modifier{% else %}Nouvel{% endif %} Employé - Gestion RH
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            {% if form.instance.pk %}
+                Modifier l'employé {{ form.instance.nom }} {{ form.instance.prenom }}
+            {% else %}
+                Nouvel Employé
+            {% endif %}
+        </h1>
+        <a href="{% url 'rh_app:employe_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.nom.id_for_label }}" class="form-label">Nom</label>
+                            {% render_field form.nom class="form-control" %}
+                            {% if form.nom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.nom.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.prenom.id_for_label }}" class="form-label">Prénom</label>
+                            {% render_field form.prenom class="form-control" %}
+                            {% if form.prenom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.prenom.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.poste.id_for_label }}" class="form-label">Poste</label>
+                            {% render_field form.poste class="form-control" %}
+                            {% if form.poste.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.poste.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                            {% render_field form.statut class="form-select" %}
+                            {% if form.statut.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.statut.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                            {% render_field form.email class="form-control" type="email" %}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.telephone.id_for_label }}" class="form-label">Téléphone</label>
+                            {% render_field form.telephone class="form-control" %}
+                            {% if form.telephone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.telephone.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.adresse.id_for_label }}" class="form-label">Adresse</label>
+                    {% render_field form.adresse class="form-control" rows="3" %}
+                    {% if form.adresse.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.adresse.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

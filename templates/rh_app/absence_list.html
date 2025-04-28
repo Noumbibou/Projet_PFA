@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Liste des Absences - Gestion RH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Liste des Absences</h1>
+        <div>
+            {% if user.is_staff %}
+            <a href="{% url 'rh_app:absence_export_pdf' %}" class="btn btn-info me-2">
+                <i class="fas fa-file-pdf"></i> Exporter en PDF
+            </a>
+            {% endif %}
+            <a href="{% url 'rh_app:absence_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle Absence
+            </a>
+        </div>
+    </div>
+
+    {% if form %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="{{ form.date_debut.id_for_label }}" class="form-label">Date Début</label>
+                    {{ form.date_debut }}
+                </div>
+                <div class="col-md-3">
+                    <label for="{{ form.date_fin.id_for_label }}" class="form-label">Date Fin</label>
+                    {{ form.date_fin }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.employe.id_for_label }}" class="form-label">Employé</label>
+                    {{ form.employe }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                    {{ form.statut }}
+                </div>
+                <div class="col-md-2">
+                    <label for="{{ form.raison.id_for_label }}" class="form-label">Raison</label>
+                    {{ form.raison }}
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                    <a href="{% url 'rh_app:absence_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Employé</th>
+                            <th>Date Début</th>
+                            <th>Date Fin</th>
+                            <th>Raison</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for absence in absences %}
+                        <tr>
+                            <td>{{ absence.employe.nom }} {{ absence.employe.prenom }}</td>
+                            <td>{{ absence.date_debut }}</td>
+                            <td>{{ absence.date_fin }}</td>
+                            <td>{{ absence.get_raison_display }}</td>
+                            <td>
+                                <span class="badge {% if absence.statut == 'approuvee' %}bg-success{% elif absence.statut == 'refusee' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {{ absence.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="#" class="btn btn-info btn-sm" onclick="showAbsenceDetails({{ absence.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.is_staff or absence.employe == user.employe %}
+                                    <a href="{% url 'rh_app:absence_update' absence.pk %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Aucune absence enregistrée</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section des détails -->
+    <div id="absenceDetails" class="card shadow mb-4" style="display: none;">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Détails de l'absence</h6>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="$('#absenceDetails').hide();">
+                <i class="fas fa-times"></i> Fermer
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <tr>
+                        <th>Employé</th>
+                        <td id="detailEmploye"></td>
+                    </tr>
+                    <tr>
+                        <th>Période</th>
+                        <td id="detailPeriode"></td>
+                    </tr>
+                    <tr>
+                        <th>Raison</th>
+                        <td id="detailRaison"></td>
+                    </tr>
+                    <tr>
+                        <th>Statut</th>
+                        <td id="detailStatut"></td>
+                    </tr>
+                    <tr id="detailDescriptionRow" style="display: none;">
+                        <th>Description</th>
+                        <td id="detailDescription"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+            },
+            "order": [[1, "desc"]]
+        });
+    });
+
+    function showAbsenceDetails(absenceId) {
+        // Récupérer les données de l'absence
+        const absence = {
+            {% for absence in absences %}
+            {{ absence.id }}: {
+                employe: "{{ absence.employe.nom }} {{ absence.employe.prenom }}",
+                periode: "{{ absence.date_debut }} au {{ absence.date_fin }}",
+                raison: "{{ absence.get_raison_display }}",
+                statut: "{{ absence.get_statut_display }}",
+                description: "{{ absence.description|default:'' }}"
+            },
+            {% endfor %}
+        };
+
+        // Afficher les détails
+        $('#detailEmploye').text(absence[absenceId].employe);
+        $('#detailPeriode').text(absence[absenceId].periode);
+        $('#detailRaison').text(absence[absenceId].raison);
+        $('#detailStatut').text(absence[absenceId].statut);
+        
+        if (absence[absenceId].description) {
+            $('#detailDescription').text(absence[absenceId].description);
+            $('#detailDescriptionRow').show();
+        } else {
+            $('#detailDescriptionRow').hide();
+        }
+
+        // Afficher la section des détails
+        $('#absenceDetails').show();
+        
+        // Faire défiler jusqu'aux détails
+        $('html, body').animate({
+            scrollTop: $('#absenceDetails').offset().top - 100
+        }, 500);
+    }
+</script>
+{% endblock %}
+{% endblock %} 
