@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Application de Gestion RH
 
 Une application web de gestion des ressources humaines développée avec Django.
@@ -97,3 +98,6 @@ python manage.py runserver
 ## Licence
 
 MIT 
+=======
+# Projet_PFA
+>>>>>>> 1ed9f65b807f15acb2ceb4aad2996adee2823b3e
