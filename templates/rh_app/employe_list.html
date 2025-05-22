@@ -6,56 +6,10 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">Liste des Employés</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeModal">
+        <a href="{% url 'rh_app:employe_create' %}" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Nouvel Employé
-        </button>
+        </a>
     </div>
-
-    <!-- Modal pour ajouter un employé -->
-    <div class="modal fade" id="employeModal" tabindex="-1" aria-labelledby="employeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="employeModalLabel">Nouvel Employé</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="employeForm" method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="nom" class="form-label">Nom</label>
-                            <input type="text" class="form-control" id="nom" name="nom" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="prenom" class="form-label">Prénom</label>
-                            <input type="text" class="form-control" id="prenom" name="prenom" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="poste" class="form-label">Poste</label>
-                            <input type="text" class="form-control" id="poste" name="poste" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="numero_telephone" class="form-label">Numéro de téléphone</label>
-                            <input type="text" class="form-control" id="numero_telephone" name="numero_telephone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="adresse" class="form-label">Adresse</label>
-                            <textarea class="form-control" id="adresse" name="adresse" rows="3" required></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-primary" id="saveEmploye">Enregistrer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Tableau des employés -->
     <div class="card shadow mb-4">
         <div class="card-body">
@@ -104,58 +58,4 @@
         </div>
     </div>
 </div>
-
-{% block extra_js %}
-<script>
-$(document).ready(function() {
-    // Initialisation de DataTables
-    var table = $('#employeTable').DataTable({
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
-        }
-    });
-
-    // Gestion du formulaire
-    $('#saveEmploye').click(function() {
-        var formData = $('#employeForm').serialize();
-        
-        $.ajax({
-            url: "{% url 'rh_app:employe_create' %}",
-            type: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.success) {
-                    // Ajouter la nouvelle ligne au tableau
-                    var newRow = table.row.add([
-                        response.employe.nom,
-                        response.employe.prenom,
-                        response.employe.poste,
-                        '<span class="badge bg-success">Actif</span>',
-                        response.employe.email,
-                        response.employe.numero_telephone,
-                        '<a href="/employes/' + response.employe.id + '/" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a> ' +
-                        '<a href="/employes/' + response.employe.id + '/modifier/" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a> ' +
-                        '<a href="/employes/' + response.employe.id + '/supprimer/" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>'
-                    ]).draw();
-                    
-                    // Fermer le modal
-                    $('#employeModal').modal('hide');
-                    
-                    // Réinitialiser le formulaire
-                    $('#employeForm')[0].reset();
-                    
-                    // Afficher un message de succès
-                    alert('Employé ajouté avec succès!');
-                } else {
-                    alert('Erreur: ' + response.error);
-                }
-            },
-            error: function(xhr, status, error) {
-                alert('Une erreur est survenue: ' + error);
-            }
-        });
-    });
-});
-</script>
-{% endblock %}
 {% endblock %} 

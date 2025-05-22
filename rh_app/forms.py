@@ -48,7 +48,7 @@ class AbsenceForm(forms.ModelForm):
 
     class Meta:
         model = Absence
-        fields = ['employe', 'date_debut', 'date_fin', 'raison', 'description']
+        fields = ['employe', 'date_debut', 'date_fin', 'raison', 'description', 'statut']
         widgets = {
             'date_debut': forms.DateInput(attrs={'type': 'date'}),
             'date_fin': forms.DateInput(attrs={'type': 'date'}),

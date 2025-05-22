@@ -97,11 +97,11 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="{{ form.telephone.id_for_label }}" class="form-label">Téléphone</label>
-                            {% render_field form.telephone class="form-control" %}
-                            {% if form.telephone.errors %}
+                            <label for="{{ form.numero_telephone.id_for_label }}" class="form-label">Téléphone</label>
+                            {% render_field form.numero_telephone class="form-control" %}
+                            {% if form.numero_telephone.errors %}
                             <div class="invalid-feedback d-block">
-                                {{ form.telephone.errors }}
+                                {{ form.numero_telephone.errors }}
                             </div>
                             {% endif %}
                         </div>

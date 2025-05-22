@@ -9,9 +9,13 @@ from django.db.models import Q, Count
 from django.utils import timezone
 from datetime import datetime, date, timedelta
 import csv
+from django.contrib.auth.hashers import make_password
+import secrets
 from reportlab.pdfgen import canvas
 from io import BytesIO
 import json
+from django.contrib.auth.models import User
+from django.contrib import messages
 
 from .models import Employe, Presence, Absence
 from .forms import (
@@ -142,41 +146,33 @@ def employe_detail(request, pk):
     return render(request, 'rh_app/employe_detail.html', {'employe': employe})
 
 @login_required
-@user_passes_test(is_staff)
+@user_passes_test(is_admin)
 def employe_create(request):
     if request.method == 'POST':
         form = EmployeForm(request.POST)
         if form.is_valid():
-            employe = form.save()
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'employe': {
-                        'id': employe.id,
-                        'nom': employe.nom,
-                        'prenom': employe.prenom,
-                        'poste': employe.poste,
-                        'email': employe.email,
-                        'numero_telephone': employe.numero_telephone,
-                    }
-                })
-            messages.success(request, 'Employé créé avec succès.')
-            return redirect('rh_app:employe_list')
-        else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'error': form.errors.as_text()
-                })
+            # Créer un utilisateur associé à l'employé
+            email = form.cleaned_data['email']
+            username = email.split('@')[0]
+            # Vérifie si le username existe déjà
+            if User.objects.filter(username=username).exists():
+                messages.error(request, "Un utilisateur avec ce nom existe déjà.")
+            else:
+                password = secrets.token_urlsafe(8) 
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    first_name=form.cleaned_data['prenom'],
+                    last_name=form.cleaned_data['nom'],
+                    password=password
+                )
+                employe = form.save(commit=False)
+                employe.user = user
+                employe.save()
+                messages.success(request, "Employé créé avec succès.")
+                return redirect('rh_app:employe_list')
     else:
         form = EmployeForm()
-    
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': False,
-            'error': 'Méthode non autorisée'
-        })
-    
     return render(request, 'rh_app/employe_form.html', {'form': form})
 
 @login_required
